@@ -14,6 +14,10 @@ export default function Home() {
     setResults(searchResults);
   }
 
+  async function addToWishList(id: number) {
+    console.log(id);
+  }
+
   return (
     <main>
       <section className="search-form">
