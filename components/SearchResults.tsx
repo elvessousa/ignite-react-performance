@@ -1,28 +1,45 @@
-import { useMemo } from 'react';
+import { List, ListRowRenderer } from 'react-virtualized';
 import { ProductItem } from './ProductItem';
 
 type SearchResultsProps = {
+  totalPrice: number;
   results: {
     id: number;
     price: number;
+    priceFormatted: string;
     title: string;
   }[];
+  onAddToWishlist: (id: number) => void;
 };
 
-export function SearchResults({ results }: SearchResultsProps) {
-  const totalPrice = useMemo(() => {
-    return results.reduce((total, product) => {
-      return total + product.price;
-    }, 0);
-  }, [results]);
-
+export function SearchResults({
+  totalPrice,
+  results,
+  onAddToWishlist,
+}: SearchResultsProps) {
+  const rowRenderer: ListRowRenderer = ({ index, key, style }) => {
+    return (
+      <div key={key} style={style}>
+        <ProductItem
+          key={key}
+          product={results[index]}
+          onAddToWishlist={onAddToWishlist}
+        />
+      </div>
+    );
+  };
   return (
     <section>
       <h2>Total price: {totalPrice}</h2>
       <div className="results">
-        {results.map((product) => (
-          <ProductItem key={product.id} product={product} />
-        ))}
+        <List
+          height={300}
+          rowHeight={100}
+          width={700}
+          overscanRowCount={3}
+          rowCount={results.length}
+          rowRenderer={rowRenderer}
+        />
       </div>
     </section>
   );

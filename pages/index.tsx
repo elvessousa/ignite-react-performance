@@ -1,22 +1,46 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
 import { SearchResults } from '../components/SearchResults';
+
+type Results = {
+  totalPrice: number;
+  data: any[];
+};
 
 export default function Home() {
   const [term, setTerm] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<Results>({
+    totalPrice: 0,
+    data: [],
+  });
 
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
 
-    const products = await fetch(`http://localhost:3333/products?q=${term}`);
-    const searchResults = await products.json();
+    const response = await fetch(`http://localhost:3333/products?q=${term}`);
+    const data = await response.json();
 
-    setResults(searchResults);
+    const formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+
+    const products = data.map((product) => ({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      priceFormatted: formatter.format(product.price),
+    }));
+
+    const totalPrice = data.reduce((total, product) => {
+      return total + product.price;
+    }, 0);
+
+    setResults({ data: products, totalPrice });
   }
 
-  async function addToWishList(id: number) {
+  const addToWishList = useCallback((id: number) => {
     console.log(id);
-  }
+  }, []);
 
   return (
     <main>
@@ -32,7 +56,13 @@ export default function Home() {
         </form>
       </section>
 
-      {results && <SearchResults results={results} />}
+      {results && (
+        <SearchResults
+          results={results.data}
+          totalPrice={results.totalPrice}
+          onAddToWishlist={addToWishList}
+        />
+      )}
     </main>
   );
 }
